@@ -10,7 +10,7 @@
 
 static const char *dirpath = "/home/fdh/Documents";
 char list[]={"qE1~ YMUR2\"`hNIdPzi%^t@(Ao:=CQ,nx4S[7mHFye#aT6+v)DfKL$r?bkOGB>}!9_wV']jcp5JZ&Xl|\\8s;g<{3.u*W-0"};
-char h[256];
+char h[256],dh[256];
 
 void encode(const char path[]){
     int i,j,k;
@@ -32,7 +32,8 @@ static int xmp_getattr(const char *path, struct stat *stbuf)
   int res;
 	char fpath[1000], final[1000];
     int i,j,k;
-        strcpy(h,path);
+    strcpy(h,path);
+    if(strcmp(h, ".") != 0 && strcmp(h, "..") != 0){
             for(i=0;i<strlen(h);i++){
                 for(j=0;j<strlen(list);j++){
                     if(h[i]==list[j])break;
@@ -43,7 +44,8 @@ static int xmp_getattr(const char *path, struct stat *stbuf)
                     h[i]=list[k];
                 }
             }
-    puts(h);
+    }
+    //puts(h);
     strcpy(final,h);
 	sprintf(fpath,"%s%s",dirpath,final);
 	res = lstat(fpath, stbuf);
@@ -67,6 +69,7 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
         //encode(path);
         int i,j,k;
         strcpy(h,path);
+        if(strcmp(h, ".") != 0 && strcmp(h, "..") != 0){
             for(i=0;i<strlen(h);i++){
                 for(j=0;j<strlen(list);j++){
                     if(h[i]==list[j])break;
@@ -77,6 +80,8 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                     h[i]=list[k];
                 }
             }
+        }
+        puts(h);
         sprintf(fpath, "%s%s",dirpath,h);
     }
 	int res = 0;
@@ -92,11 +97,27 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		return -errno;
 
 	while ((de = readdir(dp)) != NULL) {
+        int i,j,k;
 		struct stat st;
 		memset(&st, 0, sizeof(st));
 		st.st_ino = de->d_ino;
 		st.st_mode = de->d_type << 12;
-		res = (filler(buf, de->d_name, &st, 0));
+        strcpy(dh,de->d_name);
+        if(strcmp(dh, ".") != 0 && strcmp(dh, "..") != 0){
+            for(i=0;i<strlen(dh);i++){
+                for(j=0;j<strlen(list);j++){
+                    if(dh[i]==list[j])break;
+                }
+                if(dh[i]!=(char)47){
+                    k = j-17;
+                    if(k<0)k=k+94;
+                    dh[i]=list[k];
+                }
+            }
+        }
+        puts(h);
+        puts(dh);
+		res = (filler(buf, dh, &st, 0));
 			if(res!=0) break;
 	}
 
@@ -116,6 +137,7 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 	else{
         int i,j,k;
         strcpy(h,path);
+        if(strcmp(h, ".") != 0 && strcmp(h, "..") != 0){
             for(i=0;i<strlen(h);i++){
                 for(j=0;j<strlen(list);j++){
                     if(h[i]==list[j])break;
@@ -126,6 +148,7 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
                     h[i]=list[k];
                 }
             }
+        }
         sprintf(fpath, "%s%s",dirpath,h);
     }
 	int res = 0;
